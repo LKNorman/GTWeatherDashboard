@@ -160,4 +160,116 @@ function showWeather(city) {
     });
   });
 }
+// function to display the 5 day forecast
+function showForecast(city) {
+  queryURL =
+    "https://api.openweathermap.org/data/2.5/forecast?q=" +
+    city +
+    "&units=imperial&appid=" +
+    APIKey;
 
+  $.ajax({
+    url: queryURL,
+    method: "GET",
+    error: function() {
+      for (var i = 0; i < 5; i++) {
+        $("#forecast-temp-" + i).text("");
+        $("#forecast-humidity-" + i).text("");
+        $("#forecast-date-" + i).text("");
+        $("#forecast-icon-" + i).attr("src", "");
+        $("#forecast-icon-" + i).attr("alt", "...");
+        $("#forecast-bg-" + i).attr("src", "assets/images/no_data.jpg");
+        $("#forecast-bg-" + i).attr("alt", "no weather image");
+      }
+      $("#carouselIndicatorsDiv").carousel(0);
+    }
+  }).then(function(response) {
+    for (var i = 0; i < 5; i++) {
+      timeIndex = i * 8 + 7;
+
+      $("#forecast-temp-" + i).text(
+        "Temperature: " + parseInt(response.list[timeIndex].main.temp) + "°F"
+      );
+      $("#forecast-humidity-" + i).text(
+        "Humidity: " + response.list[timeIndex].main.humidity + "%"
+      );
+      var date = moment.unix(response.list[timeIndex].dt);
+      var dateStr = date.format("M/D/YYYY");
+      $("#forecast-date-" + i).text(dateStr);
+      var icon = response.list[timeIndex].weather[0].icon;
+      var iconURL = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
+      $("#forecast-icon-" + i).attr("src", iconURL);
+      $("#forecast-icon-" + i).attr("alt", "weather icon");
+
+      var bgURL = getBgURL(icon);
+      $("#forecast-bg-" + i).attr("src", bgURL);
+      $("#forecast-bg-" + i).attr("alt", "weather background image");
+    }
+
+    $("#carouselIndicatorsDiv").carousel(0);
+  });
+}
+// adds cities to the storage and adds divs for them
+function addCity(city) {
+  for (var i = 0; i < userCities.length; i++) {
+    if (userCities[i] === city) {
+      $("#" + city).remove();
+      userCities.splice(i, 1);
+    }
+  }
+  userCities.splice(0, 0, city);
+  newDiv = buildCityDiv(city);
+  $("#cities").prepend(newDiv);
+  storeCities();
+}
+function storeCities() {
+  localStorage.setItem("cities", JSON.stringify(userCities));
+}
+$(document).ready(function() {
+  loadCities();
+
+  //loads most recent viewed city
+  if (userCities[0] !== undefined) {
+    displayCityData(userCities[0]);
+  }
+
+  //creates click event for the submit button
+  $("#city-submit").on("click", function() {
+    event.preventDefault();
+    var city = $("#city-input").val();
+    $("#city-input").val("");
+
+    if (city !== "") {
+      addCity(city);
+      displayCityData(city);
+    }
+  });
+
+  $(document).on("click", ".city-div", function(event) {
+    var city = $(this).text();
+    displayCityData(city);
+  });
+});
+//   carousel control and indicators
+$("#carouselIndicatorsDiv").carousel();
+$(".carousel-indicators li[data-slide-to=0]").click(function() {
+  $("#carouselIndicatorsDiv").carousel(0);
+});
+$(".carousel-indicators li[data-slide-to=1]").click(function() {
+  $("#carouselIndicatorsDiv").carousel(1);
+});
+$(".carousel-indicators li[data-slide-to=2]").click(function() {
+  $("#carouselIndicatorsDiv").carousel(2);
+});
+$(".carousel-indicators li[data-slide-to=3]").click(function() {
+  $("#carouselIndicatorsDiv").carousel(3);
+});
+$(".carousel-indicators li[data-slide-to=4]").click(function() {
+  $("#carouselIndicatorsDiv").carousel(4);
+});
+$(".carousel-control-prev").click(function() {
+  $("#carouselIndicatorsDiv").carousel("prev");
+});
+$(".carousel-control-next").click(function() {
+  $("#carouselIndicatorsDiv").carousel("next");
+});
